@@ -33,6 +33,13 @@ for n = 1:length(simulations)
     conf_interval(:,n) = confidence_interval(avg(n), variance(n), niveau, N);
 end
 
+solution_array = cat(2,simulations',avg', variance', conf_interval');
+soultion_table = array2table(...
+    solution_array,...
+    'VariableNames',... 
+    {'N', 'mean', 'variance', '95% interv lower', '95% interv upper'}...
+);
+writetable(soultion_table, 'a_table.csv')
 
 %% b)
 
