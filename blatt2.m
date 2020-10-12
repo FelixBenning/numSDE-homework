@@ -42,6 +42,28 @@ soultion_table = array2table(...
 writetable(soultion_table, 'a_table.csv')
 
 %% b)
+alpha = 0.5;
+n_vector = [10, 10^2, 10^3, 10^4, 10^5];
+niveau = 0.05;
+dim = 2;
+estimator = zeros(1,length(n_vector));
+variance = zeros(1,length(n_vector));
+conf_interval = zeros(2,length(n_vector));
+
+for i=1:length(n_vector)
+    N = ceil(n_vector(i)^(2*alpha));
+    times = 1/n_vector(i)*[0:T];
+    rv_generator = @()G(gen_black_scholes(dim, times, sigma, r),T,r);
+   [estimator(i), variance(i), conf_interval(:,i)] = monte_carlo(N,rv_generator,niveau);
+end
+
+solution_array = cat(2,n_vector',estimator', variance', conf_interval');
+soultion_table = array2table(...
+    solution_array,...
+    'VariableNames',... 
+    {'N', 'mean', 'variance', '95% interv lower', '95% interv upper'}...
+);
+writetable(soultion_table, 'b_table.csv')
 
 
 %% general function definitions
@@ -99,5 +121,17 @@ function payoff = G(price_series, expiration, interest)
     payoff = max(payoff, 0);
 end
 
+function [estimator,variance,conf_interval] = monte_carlo(N, rv_generator, niveau)
+    % N: number of samples
+    % niveau: niveau for confidence_interval
+    % rv_generator: function which generates 1-dim random variables
+    % :return: monte carlo estimator, estimated variance and confidence
+    %          interval
+    X_vector = arrayfun(@(variable)rv_generator(),1:N);
+    estimator = mean(X_vector);
+    variance = var(X_vector);
+    conf_interval = confidence_interval(estimator, variance, niveau, N);
+end
+   
 
 
