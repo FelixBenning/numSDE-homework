@@ -52,7 +52,7 @@ conf_interval = zeros(2,length(n_vector));
 
 for i=1:length(n_vector)
     N = ceil(n_vector(i)^(2*alpha));
-    times = 1/n_vector(i)*0:T;
+    times = 0:1/n_vector(i):T;
     rv_generator = @()G(gen_black_scholes(dim, times, sigma, r, s),T,r);
    [estimator(i), variance(i), conf_interval(:,i)] = monte_carlo(N,rv_generator,niveau);
 end
@@ -80,11 +80,8 @@ function brownian_motion = generate_bm(dim, times)
     s = size(times);
     std_normal = randn(dim, s(2)); % s(2) = T (1:columsize, 2:rowsize)
     sqrt_diffs = sqrt(diff(cat(2,0, times))); % insert t_0 = 0
-    brownian_motion = zeros(dim,s(2)); % preallocating the correct size
-    for k = 1:s(2)
-        brownian_motion(:,k) = std_normal(:,1:k) * transpose(sqrt_diffs(1,1:k));
-    end
-end
+    brownian_motion = cumsum(std_normal .* sqrt_diffs, 2);
+ end
 
 function price_series = black_scholes(times, brownian_motion, cov_matrix, interest, start_price)
     % times: sorted row vector (1xT) of positive timestamps for prices
