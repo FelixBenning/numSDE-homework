@@ -52,7 +52,7 @@ conf_interval = zeros(2,length(n_vector));
 
 for i=1:length(n_vector)
     N = ceil(n_vector(i)^(2*alpha));
-    times = 1/n_vector(i)*[0:T];
+    times = 1/n_vector(i)*0:T;
     rv_generator = @()G(gen_black_scholes(dim, times, sigma, r, s),T,r);
    [estimator(i), variance(i), conf_interval(:,i)] = monte_carlo(N,rv_generator,niveau);
 end
@@ -109,7 +109,7 @@ function payoff = basket_call(price_at_expiration, weights, strike, expiration, 
     % expiration: expiration time
     % interest: interest rate
     % :return payoff: payoff of the basket call
-    payoff = exp(-interest*expiration)*weights*price_at_expiration - strike;
+    payoff = exp(-interest*expiration)*(weights*price_at_expiration - strike);
     payoff = max(payoff, 0);
 end
 
