@@ -25,7 +25,7 @@ for n = 1:length(simulations)
     payoffs = zeros(1,N);
     for k = 1:N
         % N simulations stored in payoffs
-        prices = gen_black_scholes(dim, T, sigma, r, s);
+        prices = black_scholes(dim, T, sigma, r, s);
         payoffs(k) = basket_call(prices, weights, strike, T, r);
     end
     avg(n) = mean(payoffs);
@@ -53,7 +53,7 @@ conf_interval = zeros(2,length(n_vector));
 for i=1:length(n_vector)
     N = ceil(n_vector(i)^(2*alpha));
     times = 0:1/n_vector(i):T;
-    rv_generator = @()G(gen_black_scholes(dim, times, sigma, r, s),T,r);
+    rv_generator = @()G(black_scholes(dim, times, sigma, r, s),T,r);
    [estimator(i), variance(i), conf_interval(:,i)] = monte_carlo(N,rv_generator,niveau);
 end
 
@@ -68,56 +68,6 @@ writetable(soultion_table, 'b_table.csv')
 
 %% general function definitions
 
-function conf_interval = confidence_interval(avg, variance, niveau, N)
-    conf_interval = avg+norminv([niveau/2, 1-niveau/2])*sqrt(variance/N);
-end
-
-function brownian_motion = generate_bm(dim, times)
-    % dim: how many dimensions?
-    % times: sorted row vector (1xT) of positive timestamps to sample the bm
-    % :returns borwnian_motion: (dim x T) vector where every column i is the
-    %   bm at time times(i)
-    s = size(times);
-    std_normal = randn(dim, s(2)); % s(2) = T (1:columsize, 2:rowsize)
-    sqrt_diffs = sqrt(diff(cat(2,0, times))); % insert t_0 = 0
-    brownian_motion = cumsum(std_normal .* sqrt_diffs, 2);
- end
-
-function price_series = black_scholes(times, brownian_motion, cov_matrix, interest, start_price)
-    % times: sorted row vector (1xT) of positive timestamps for prices
-    % brownian_motion: d x T brownian motion where column i matches times(i)
-    % cov_matrix: a m x m covariance matrix to use
-    % interest: the interest rate
-    % start_price: start_price column vector
-    % :return price_series: a m x T price series is returned 
-    vec = (interest-0.5*sum(cov_matrix.^2, 2));
-    price_series = start_price.*exp(vec * times + cov_matrix * brownian_motion);
-end
-
-function price_series = gen_black_scholes(dim, times, cov_matrix, interest, start_price)
-    price_series = black_scholes(times, generate_bm(dim,times), cov_matrix, interest, start_price);
-end
-
-function payoff = basket_call(price_at_expiration, weights, strike, expiration, interest)
-    % price_at_expiration: (dx1) price vector of the d products in the
-    % basket
-    % weights: (1xd) weights of the d products in the basket
-    % strike: cost of the entire basket fixed at time 0
-    % expiration: expiration time
-    % interest: interest rate
-    % :return payoff: payoff of the basket call
-    payoff = exp(-interest*expiration)*(weights*price_at_expiration - strike);
-    payoff = max(payoff, 0);
-end
-
-function payoff = G(price_series, expiration, interest)
-    % price_series: (2xT) dimensional price series
-    % expiration: expiration time
-    % interest: interest rate
-    % :return payoff: payoff of this payoff function
-    payoff = exp(-interest*expiration)*(max(price_series(1,:))-min(price_series(2,:)));
-    payoff = max(payoff, 0);
-end
 
 function [estimator,variance,conf_interval] = monte_carlo(N, rv_generator, niveau)
     % N: number of samples
