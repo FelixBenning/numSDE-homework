@@ -32,7 +32,7 @@ solution_array = cat(2,n_vector',estimator', variance', conf_interval', times');
 soultion_table = array2table(...
     solution_array,...
     'VariableNames',... 
-    {'N', 'mean', 'variance', '95% interv lower', '95% interv upper', 'time'}...
+    {'n', 'mean', 'variance', '95% interv lower', '95% interv upper', 'time'}...
 );
 writetable(soultion_table, 'romberg.csv')
 plot(times, estimator, 'o-')
@@ -40,11 +40,6 @@ plot(times, estimator, 'o-')
 %% general function definitions
 
 function [estimator,variance,conf_interval] = romberg_monte_carlo(functional, n, alpha, beta, T, dim, niveau)
-    % N: number of samples
-    % niveau: niveau for confidence_interval
-    % rv_generator: function which generates 1-dim random variables
-    % :return: monte carlo estimator, estimated variance and confidence
-    %          interval
     m = ceil(n^beta);
     M = ceil(n^(2*alpha));
     N = ceil(n^(2*alpha-beta));
