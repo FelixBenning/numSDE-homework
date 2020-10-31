@@ -5,7 +5,7 @@ function [estimator,variance,conf_interval] = monte_carlo(rv_generator, n, alpha
     % :return: monte carlo estimator, estimated variance and confidence
     %          interval
     N = ceil(n^(2*alpha));
-    times = 0:1/n:T;
+    times = 0:T/n:T;
     X_vector = arrayfun(@(variable) rv_generator(times),1:N);
     estimator = mean(X_vector);
     variance = var(X_vector)/N;

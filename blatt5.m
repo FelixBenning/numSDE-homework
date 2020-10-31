@@ -7,7 +7,7 @@ s = 2.7;
 r = 0.05;
 alpha = 1/2;
 
-epsilons = (ones(1,6)*2).^-(2:7);
+epsilons = arrayfun(@(x) 2^-x, 2:7);
 len_eps = length(epsilons);
 conf_niveau = 0.05;
 
@@ -65,6 +65,8 @@ writetable(soultion_table, 'romberg_5.csv')
 loglog(times, conf_interval(2,:) - conf_interval(1,:), 'o-')
 
 %% Multilevel Monte Carlo
+M = 4;
+c_var = 1/2;
 
 est = zeros(1,len_eps);
 variance = zeros(1,len_eps);
@@ -74,6 +76,9 @@ times = zeros(1, len_eps);
 for idx = 1:length(epsilons)
     tic
     eps = epsilons(idx);
+    L = ceil(log(1/eps)/log(2));
+    N = arrayfun(@(l) ceil(2/(eps^2)*(L+1)*c_var*times(end)*M^-(l-1)) ,1:(L+1));
+    [est(idx), variance(idx), conf_interval(:,idx)] = multilevel_monte_carlo(functional, dim, M, L, N); 
     times(idx) = toc;
 end
 
@@ -95,6 +100,39 @@ function payoff = functional_G(time_series, price_series, interest)
     payoff = exp(-interest*expiration)*(price_series(expiration) - min(price_series));
 end
 
-function [estimator, variance, conf_interval] = multilevel_monte_carlo(functional)
+function [estimate, variance, conf_interval] = multilevel_monte_carlo(functional, dim, M, L, N)
+    % first level
+    times = cell(2,1);
+    % n = 1; %M^0
+    times{1} = [0,T]; % 0:T/n:T
     
+    p_N = cell(L+1,1);
+    p_N{1} = zeros(N(1),1);
+    for idx = 1:N(0)
+        bm = brownian_motion(dim, times{1});
+        p_N(idx,0+1) = functional(times{1}, bm); 
+    end
+    
+    % remaining levels
+    for level = 1:L
+        times{2} = times{1};
+        n = M^level;
+        times{1} = 0:T/n:T;
+        
+        p_level = zeros(N(level+1),1);
+        for idx = 1:N(level+1)
+            bm = brownian_motion(dim, times);
+            p_level(idx) = functional(times{1}, bm{1}) - functional(times{2}, bm{2});
+        end
+        p_N{level+1} = p_level;
+    end
+    
+    % calculate mean, variance, confidence intervals
+    estimate = 0;
+    variance = 0;
+    for level = 1:L+1
+        estimate = estimate + mean(p_N{level});
+        variance = variance + var(p_N{level})/N(level);
+    end
+    conf_interval = confidence_interval(estimate, variance, niveau);
 end

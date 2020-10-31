@@ -2,7 +2,7 @@ function [estimator,variance,conf_interval] = romberg_monte_carlo(functional, n,
     m = ceil(n^beta);
     M = ceil(n^(2*alpha));
     N = ceil(n^(2*alpha-beta));
-    times_m = 0:1/m:T;
+    times_m = 0:T/m:T;
     
     p_M = zeros(M,1);
     for idx = 1:M
@@ -12,7 +12,7 @@ function [estimator,variance,conf_interval] = romberg_monte_carlo(functional, n,
     
     
     times_diff = cell(2,1);
-    times_diff{1} = 0:1/n:T;
+    times_diff{1} = 0:T/n:T;
     times_diff{2} = times_m;
     
     p_diff = zeros(N,1);
