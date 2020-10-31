@@ -77,8 +77,8 @@ for idx = 1:length(epsilons)
     tic
     eps = epsilons(idx);
     L = ceil(log(1/eps)/log(2));
-    N = arrayfun(@(l) ceil(2/(eps^2)*(L+1)*c_var*times(end)*M^-(l-1)) ,1:(L+1));
-    [est(idx), variance(idx), conf_interval(:,idx)] = multilevel_monte_carlo(functional, dim, M, L, N); 
+    N = arrayfun(@(l) ceil(2/(eps^2)*(L+1)*c_var*T*M^-(l-1)) ,1:(L+1));
+    [est(idx), variance(idx), conf_interval(:,idx)] = multilevel_monte_carlo(functional, dim, T, M, L, N, conf_niveau); 
     times(idx) = toc;
 end
 
@@ -100,7 +100,7 @@ function payoff = functional_G(time_series, price_series, interest)
     payoff = exp(-interest*expiration)*(price_series(expiration) - min(price_series));
 end
 
-function [estimate, variance, conf_interval] = multilevel_monte_carlo(functional, dim, M, L, N)
+function [estimate, variance, conf_interval] = multilevel_monte_carlo(functional, dim, T, M, L, N, niveau)
     % first level
     times = cell(2,1);
     % n = 1; %M^0
@@ -108,9 +108,9 @@ function [estimate, variance, conf_interval] = multilevel_monte_carlo(functional
     
     p_N = cell(L+1,1);
     p_N{1} = zeros(N(1),1);
-    for idx = 1:N(0)
+    for idx = 1:N(1)
         bm = brownian_motion(dim, times{1});
-        p_N(idx,0+1) = functional(times{1}, bm); 
+        p_N{1}(idx) = functional(times{1}, bm); 
     end
     
     % remaining levels
