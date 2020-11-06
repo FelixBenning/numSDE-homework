@@ -97,7 +97,7 @@ function payoff = functional_G(time_series, price_series, interest)
     % 1xT dimensional time_series and price_series
     % :return payoff
     expiration = time_series(end);
-    payoff = exp(-interest*expiration)*(price_series(expiration) - min(price_series));
+    payoff = exp(-interest*expiration)*(price_series(end) - min(price_series));
 end
 
 function [estimate, variance, conf_interval] = multilevel_monte_carlo(functional, dim, T, M, L, N, niveau)
