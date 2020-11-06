@@ -1,8 +1,8 @@
 function simulation = ornsteinUhlenbeck(T, x_0, mu, lambda, n)
-    times = 0:T/n:T;
+    times = T/n:T/n:T;
     [expected_value, cov_matrix] = distribution_parameters(times, lambda, mu, x_0);
     A = chol(cov_matrix);
-    simulation = expected_value + rand(1, length(times)) * A;
+    simulation = [x_0, expected_value + rand(1, length(times)) * A];
 end
 
 function [expected_value, cov_matrix] = distribution_parameters(times, lambda, mu, x_0)
